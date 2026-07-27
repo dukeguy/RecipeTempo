@@ -3,15 +3,11 @@ const path = require('path');
 
 const config = getDefaultConfig(__dirname);
 
-const originalResolveRequest = config.resolver.resolveRequest;
-
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (platform === 'web' && moduleName === 'react-native-google-mobile-ads') {
-    return path.resolve(__dirname, 'mocks/react-native-google-mobile-ads.js');
-  }
-
-  if (originalResolveRequest) {
-    return originalResolveRequest(context, moduleName, platform);
+    return {
+      type: 'empty',
+    };
   }
   return context.resolveRequest(context, moduleName, platform);
 };
