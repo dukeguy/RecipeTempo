@@ -3,11 +3,6 @@
     "name": "RecipeTempo",
     "slug": "recipetempo",
     "version": "1.0.0",
-	"web": {
-      "bundler": "metro",
-      "output": "static",
-	  "publicPath": "/recipetempo/"
-    }
     "orientation": "portrait",
     "icon": "./assets/recipeTempologo.png",
     "userInterfaceStyle": "light",
@@ -28,6 +23,9 @@
       "package": "com.anonymous.recipetempo"
     },
     "web": {
+      "bundler": "metro",
+      "output": "static",
+      "publicPath": "/recipetempo/",
       "favicon": "./assets/favicon.ico"
     },
     "plugins": [
@@ -43,7 +41,7 @@
         {
           "android": {
             "kotlinVersion": "2.1.20",
-			"kspVersion": "2.1.20"
+            "kspVersion": "2.1.20"
           }
         }
       ]
