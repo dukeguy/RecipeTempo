@@ -25,7 +25,15 @@ jobs:
       - name: Build Web App
         run: |
           EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 npm run build:web
-          cp ./dist/index.html ./dist/404.html
+          # Expo outputs static HTML in dist/index.html or dist/client/index.html depending on setup
+          if [ -f "./dist/index.html" ]; then
+            cp ./dist/index.html ./dist/404.html
+          elif [ -f "./dist/client/index.html" ]; then
+            cp ./dist/client/index.html ./dist/client/404.html
+          else
+            # Fallback copy from whatever html file is generated
+            cp ./dist/*.html ./dist/404.html
+          fi
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
