@@ -3,7 +3,6 @@ const path = require('path');
 
 const config = getDefaultConfig(__dirname);
 
-// Intercept react-native-google-mobile-ads imports when bundling for web
 const originalResolveRequest = config.resolver.resolveRequest;
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
