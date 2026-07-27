@@ -20,7 +20,7 @@ jobs:
         run: npm install
 
       - name: Build Web App
-        run: npm run build:web
+        run: EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 npm run build:web
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
