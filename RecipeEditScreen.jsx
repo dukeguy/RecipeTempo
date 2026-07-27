@@ -22,7 +22,7 @@ import * as Haptics from 'expo-haptics';
 import { COLORS } from './theme';
 import { createRecipeWithDetails, updateRecipeWithDetails, getRecipeWithDetails } from './database';
 
-// Safely import mobile ads only on native platforms with a try-catch fallback
+// Safely stub BannerAd for web static rendering / bundling to prevent native-only codegen errors
 let BannerAd = null;
 let BannerAdSize = null;
 let TestIds = null;
@@ -36,6 +36,8 @@ if (Platform.OS !== 'web') {
   } catch (e) {
     console.warn('Google Mobile Ads module not available or failed to load:', e);
   }
+} else {
+  BannerAd = () => null;
 }
 
 const adUnitId = __DEV__ && TestIds ? TestIds.BANNER : 'ca-app-pub-xxxxxxxx/xxxxxxxxxx';
@@ -521,8 +523,8 @@ export default function RecipeEditScreen({ route, navigation }) {
             </View>
           </Modal>
 
-          {/* Pinned Bottom Banner Ad (Safely rendered on native platforms only if loaded successfully) */}
-          {Platform.OS !== 'web' && BannerAd && (
+          {/* Pinned Bottom Banner Ad (Safely rendered on native platforms only) */}
+          {Platform.OS !== 'web' && BannerAd && typeof BannerAd !== 'function' && (
             <View style={styles.bannerContainer}>
               <BannerAd
                 unitId={adUnitId}
@@ -646,7 +648,7 @@ const styles = StyleSheet.create({
   cancelModalBtn: { backgroundColor: COLORS.cardSecondary, borderWidth: 1, borderColor: COLORS.borderPrimary },
   cancelModalBtnText: { color: COLORS.textPrimary, fontWeight: '700', fontSize: 12 },
   saveModalBtn: { backgroundColor: COLORS.primaryDark },
-  saveModalBtnText: { color: COLORS.white, fontWeight: '700', fontSize: 12 },
+  saveModalBtnText: { color: `COLORS.white`, fontWeight: '700', fontSize: 12 },
   bannerContainer: {
     position: 'absolute',
     bottom: 0,
