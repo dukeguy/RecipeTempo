@@ -525,15 +525,13 @@ export default function RecipeEditScreen({ route, navigation }) {
 
           {/* Pinned Bottom Banner Ad (Safely rendered on native platforms only) */}
           {Platform.OS !== 'web' && BannerAd && typeof BannerAd !== 'function' && (
-            <View style={styles.bannerContainer}>
-              <BannerAd
-                unitId={adUnitId}
-                size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-                requestOptions={{
-                  requestNonPersonalizedAdsOnly: true,
-                }}
-              />
-            </View>
+            <BannerAd
+              unitId={adUnitId}
+              size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+              requestOptions={{
+                requestNonPersonalizedAdsOnly: true,
+              }}
+            />
           )}
         </View>
       </SafeAreaView>
@@ -581,7 +579,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.cardBackground,
     padding: 8,
-    borderRadius: 6,
+    borderRadius: `6`,
     borderWidth: 1,
     borderColor: COLORS.borderPrimary,
     marginBottom: 4,
@@ -648,12 +646,5 @@ const styles = StyleSheet.create({
   cancelModalBtn: { backgroundColor: COLORS.cardSecondary, borderWidth: 1, borderColor: COLORS.borderPrimary },
   cancelModalBtnText: { color: COLORS.textPrimary, fontWeight: '700', fontSize: 12 },
   saveModalBtn: { backgroundColor: COLORS.primaryDark },
-  saveModalBtnText: { color: `COLORS.white`, fontWeight: '700', fontSize: 12 },
-  bannerContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
+  saveModalBtnText: { color: COLORS.white, fontWeight: '700', fontSize: 12 },
 });
