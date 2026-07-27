@@ -1,29 +1,52 @@
 {
   "expo": {
     "name": "RecipeTempo",
-    "slug": "RecipeTempo",
+    "slug": "recipetempo",
     "version": "1.0.0",
+	"web": {
+      "bundler": "metro",
+      "output": "static",
+	  "publicPath": "/recipetempo/"
+    }
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/recipeTempologo.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/recipeTempologo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FAF6F0"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.recipetempo"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#FAF6F0"
       },
-      "edgeToEdgeEnabled": true
+      "package": "com.anonymous.recipetempo"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.ico"
+    },
+    "plugins": [
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-2400579557711506~5880054197",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "2.1.20",
+			"kspVersion": "2.1.20"
+          }
+        }
+      ]
+    ]
   }
 }
