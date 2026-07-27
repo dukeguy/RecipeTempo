@@ -25,8 +25,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "publicPath": "/recipetempo/",
-      "favicon": "./assets/favicon.ico"
+      "publicPath": "/recipetempo/"
     },
     "plugins": [
       [
