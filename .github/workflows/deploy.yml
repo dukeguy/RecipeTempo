@@ -2,20 +2,19 @@ name: Deploy Web App to GitHub Pages
 
 on:
   push:
-    branches: [ main ] # Change to 'master' if your default branch is master
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install Dependencies
         run: npm install
