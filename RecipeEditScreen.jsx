@@ -7,8 +7,9 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Keyboard,
   Modal,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector, GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
@@ -18,13 +19,26 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system/legacy';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { COLORS } from './theme';
 import { createRecipeWithDetails, updateRecipeWithDetails, getRecipeWithDetails } from './database';
 
-const adUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-xxxxxxxx/xxxxxxxxxx';
+// Safely import mobile ads only on native platforms with a try-catch fallback
+let BannerAd = null;
+let BannerAdSize = null;
+let TestIds = null;
+
+if (Platform.OS !== 'web') {
+  try {
+    const Ads = require('react-native-google-mobile-ads');
+    BannerAd = Ads.BannerAd;
+    BannerAdSize = Ads.BannerAdSize;
+    TestIds = Ads.TestIds;
+  } catch (e) {
+    console.warn('Google Mobile Ads module not available or failed to load:', e);
+  }
+}
+
+const adUnitId = __DEV__ && TestIds ? TestIds.BANNER : 'ca-app-pub-xxxxxxxx/xxxxxxxxxx';
 
 // Helper to generate unique IDs without millisecond collisions
 const generateId = () => Date.now() + Math.floor(Math.random() * 100000);
@@ -215,8 +229,9 @@ export default function RecipeEditScreen({ route, navigation }) {
   const paramRecipeId = route.params?.recipeId || existingRecipe?.id || null;
 
   const [recipeId] = useState(paramRecipeId);
-  const [urlInput, setUrlInput] = useState('');
-  const [importing, setImporting] = useState(false);
+  const [newIngName, setNewIngName] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [selectedStepId, setSelectedStepId] = useState(null);
 
   const initialIngs = existingRecipe?.ingredients
     ? existingRecipe.ingredients.map(i => ({ id: i.id, name: i.name || '' }))
@@ -236,10 +251,6 @@ export default function RecipeEditScreen({ route, navigation }) {
   const [description, setDescription] = useState(existingRecipe?.description || '');
   const [ingredients, setIngredients] = useState(initialIngs);
   const [steps, setSteps] = useState(initialStps);
-
-  const [newIngName, setNewIngName] = useState('');
-  const [isDragging, setIsDragging] = useState(false);
-  const [selectedStepId, setSelectedStepId] = useState(null);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalStepId, setModalStepId] = useState(null);
@@ -445,7 +456,7 @@ export default function RecipeEditScreen({ route, navigation }) {
                   </TouchableOpacity>
                 </View>
 
-                <Text style={styles.hintText}>Drag and resize steps below to schedule them.</Text>
+                <Text style={styles.hintText}>Tap step fields or configure steps below.</Text>
 
                 {steps.length === 0 ? (
                   <Text style={styles.emptyStepsText}>No steps added yet.</Text>
@@ -453,7 +464,23 @@ export default function RecipeEditScreen({ route, navigation }) {
                   <View style={styles.timelineContainer}>
                     {steps.map((st) => (
                       <View key={st.id} style={styles.stepPreviewCard}>
-                        <Text style={styles.stepPreviewTitle}>{st.title || 'Untitled Step'}</Text>
+                        <View style={styles.blockHeaderRow}>
+                          <TouchableOpacity
+                            onPress={() => openModalForStepField(st.id, 'title', st.title)}
+                          >
+                            <Text style={styles.stepPreviewTitle}>{st.title || 'Untitled Step'}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => handleDeleteStep(st.id)}>
+                            <Text style={styles.blockDeleteText}>✕</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => openModalForStepField(st.id, 'instruction', st.instruction)}
+                        >
+                          <Text style={styles.blockInstructionText} numberOfLines={2}>
+                            {st.instruction || 'Tap to add instructions...'}
+                          </Text>
+                        </TouchableOpacity>
                         <Text style={styles.stepPreviewMeta}>
                           ⏱ Offset: {st.start_offset}m | Duration: {st.duration}m
                         </Text>
@@ -494,16 +521,18 @@ export default function RecipeEditScreen({ route, navigation }) {
             </View>
           </Modal>
 
-          {/* Pinned Bottom Banner Ad */}
-          <View style={styles.bannerContainer}>
-            <BannerAd
-              unitId={adUnitId}
-              size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-              requestOptions={{
-                requestNonPersonalizedAdsOnly: true,
-              }}
-            />
-          </View>
+          {/* Pinned Bottom Banner Ad (Safely rendered on native platforms only if loaded successfully) */}
+          {Platform.OS !== 'web' && BannerAd && (
+            <View style={styles.bannerContainer}>
+              <BannerAd
+                unitId={adUnitId}
+                size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+                requestOptions={{
+                  requestNonPersonalizedAdsOnly: true,
+                }}
+              />
+            </View>
+          )}
         </View>
       </SafeAreaView>
     </GestureHandlerRootView>
@@ -571,7 +600,43 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderPrimary,
   },
   stepPreviewTitle: { fontSize: 13, fontWeight: '700', color: COLORS.textPrimary },
-  stepPreviewMeta: { fontSize: 11, color: COLORS.primary, marginTop: 2 },
+  stepPreviewMeta: { fontSize: 11, color: COLORS.primary, marginTop: 4 },
+  ganttBlockVertical: {
+    position: 'absolute',
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: COLORS.borderPrimary,
+    overflow: 'hidden',
+  },
+  ganttBlockSelected: {
+    borderColor: COLORS.primary,
+    borderWidth: 2,
+  },
+  dragHandleBar: {
+    height: 18,
+    backgroundColor: COLORS.cardSecondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dragHandleText: { fontSize: 10, color: COLORS.textSecondary, fontWeight: 'bold' },
+  blockInnerContent: { padding: 6, flex: 1 },
+  blockHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  blockTitleTouch: { flex: 1 },
+  blockTitleText: { fontSize: 12, fontWeight: '700', color: COLORS.textPrimary },
+  blockDeleteText: { fontSize: 12, color: COLORS.danger, fontWeight: '700' },
+  blockInstructionTouch: { marginTop: 4 },
+  blockInstructionText: { fontSize: 11, color: COLORS.textSecondary },
+  timeBadgeRow: { marginTop: 'auto' },
+  timeBadgeText: { fontSize: 10, color: COLORS.primary },
+  resizeHandle: {
+    height: 14,
+    backgroundColor: COLORS.cardSecondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resizeHandleActive: { backgroundColor: COLORS.primary },
+  resizeHandleBarIndicator: { width: 20, height: 3, backgroundColor: COLORS.borderPrimary, borderRadius: 2 },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
   modalContent: { backgroundColor: COLORS.cardBackground, padding: 16, borderRadius: 8, borderWidth: 1, borderColor: COLORS.borderPrimary },
