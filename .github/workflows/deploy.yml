@@ -4,7 +4,6 @@ on:
   push:
     branches: [ main ]
 
-# Add permissions block here
 permissions:
   contents: write
 
@@ -24,7 +23,9 @@ jobs:
         run: npm install
 
       - name: Build Web App
-        run: EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 npm run build:web
+        run: |
+          EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 npm run build:web
+          cp ./dist/index.html ./dist/404.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
