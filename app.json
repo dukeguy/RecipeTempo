@@ -26,6 +26,9 @@
       "bundler": "metro",
       "output": "static"
     },
+    "router": {
+      "origin": false
+    },
     "plugins": [
       [
         "react-native-google-mobile-ads",
