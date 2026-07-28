@@ -25,13 +25,14 @@ jobs:
       - name: Build Web App
         run: |
           EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 npm run build:web
-          # Expo Router outputs the entry point file inside dist/index.html or dist/_expo/...
-          # Create a fallback 404.html to resolve routing for GitHub Pages SPAs
-          if [ -f "./dist/index.html" ]; then
-            cp ./dist/index.html ./dist/404.html
-          else
-            touch ./dist/404.html
+          
+          # If Expo didn't output an index.html at root, create a minimal fallback SPA container referencing the bundle
+          if [ ! -f "./dist/index.html" ]; then
+            echo '<!DOCTYPE html><html><head><meta charset="utf-8"/><title>RecipeTempo</title></head><body><div id="root"></div><script src="./_expo/static/js/web/index-4ba629bcf32ac8c5796e75f7c8d2131c.js"></script></body></html>' > ./dist/index.html
           fi
+          
+          cp ./dist/index.html ./dist/404.html
+          touch ./dist/.nojekyll
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
