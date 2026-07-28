@@ -24,10 +24,13 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "single"
     },
     "router": {
       "origin": false
+    },
+    "experiments": {
+      "baseUrl": ""
     },
     "plugins": [
       [
@@ -49,4 +52,4 @@
       "expo-router"
     ]
   }
-}
+}		
