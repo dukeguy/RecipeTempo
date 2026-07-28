@@ -21,19 +21,18 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
-
-      - name: Build Web App
+- name: Build Web App
         run: |
           EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 npm run build:web
           
-          # If Expo didn't output an index.html at root, create a minimal fallback SPA container referencing the bundle
+          # Dynamically create an index.html if Expo didn't output one, injecting the actual built JS bundle
           if [ ! -f "./dist/index.html" ]; then
-            echo '<!DOCTYPE html><html><head><meta charset="utf-8"/><title>RecipeTempo</title></head><body><div id="root"></div><script src="./_expo/static/js/web/index-4ba629bcf32ac8c5796e75f7c8d2131c.js"></script></body></html>' > ./dist/index.html
+            JS_BUNDLE=$(find ./dist/_expo/static/js/web -name "index-*.js" -exec basename {} \; | head -n 1)
+            echo '<!DOCTYPE html><html><head><meta charset="utf-8"/><title>RecipeTempo</title></head><body><div id="root"></div><script src="./_expo/static/js/web/'$JS_BUNDLE'"></script></body></html>' > ./dist/index.html
           fi
           
           cp ./dist/index.html ./dist/404.html
           touch ./dist/.nojekyll
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         env:
