@@ -24,8 +24,9 @@ jobs:
 
       - name: Build Web App
         run: |
-          EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 EXPO_PUBLIC_BASE_URL="/RecipeTempo" npx expo export --platform web --output-dir dist --clear
+          EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 npx expo export --platform web --output-dir dist --clear
           
+          # Only create a fallback if index.html is completely missing, and use absolute subpath script reference
           if [ ! -f "./dist/index.html" ]; then
             JS_BUNDLE=$(find ./dist/_expo/static/js/web -name "index-*.js" -exec basename {} \; | head -n 1)
             echo "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/><title>RecipeTempo</title></head><body><div id=\"root\"></div><script src=\"/RecipeTempo/_expo/static/js/web/${JS_BUNDLE}\"></script></body></html>" > ./dist/index.html
