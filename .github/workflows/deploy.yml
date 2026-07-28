@@ -26,9 +26,10 @@ jobs:
         run: |
           EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 npx expo export --platform web --output-dir dist --clear
           
-          # Move Expo's generated static index.html from its subfolder to the root dist folder
-          if [ -f "./dist/index/index.html" ]; then
-            cp ./dist/index/index.html ./dist/index.html
+          # Find any generated HTML file in dist and bring it to root as index.html
+          FOUND_HTML=$(find ./dist -name "*.html" | head -n 1)
+          if [ -n "$FOUND_HTML" ] && [ "$FOUND_HTML" != "./dist/index.html" ]; then
+            cp "$FOUND_HTML" ./dist/index.html
           fi
 
           # Ensure 404.html exists for client-side routing fallback
