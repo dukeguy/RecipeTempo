@@ -1,4 +1,4 @@
-name: Deploy Web App to GitHub Pages
+name: Deploy RecipeTempo Web App
 
 on:
   push:
@@ -22,11 +22,10 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Build Web App
+      - name: Build Web App Clean
         run: |
           EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 npx expo export --platform web --output-dir dist --clear
           
-          # Always generate a reliable SPA root index.html with absolute subpath references for GitHub Pages
           JS_BUNDLE=$(find ./dist/_expo/static/js/web -name "index-*.js" -exec basename {} \; | head -n 1)
           echo "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/><title>RecipeTempo</title></head><body><div id=\"root\"></div><script src=\"/RecipeTempo/_expo/static/js/web/${JS_BUNDLE}\"></script></body></html>" > ./dist/index.html
           
