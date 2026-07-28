@@ -130,12 +130,10 @@ export default function HomeScreen({ navigation }) {
       }
       const safeTitle = (recipe.title || 'recipe').replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const fileName = `${safeTitle}_recipetempo.json`;
-      const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
-
-      await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(recipe, null, 2));
+      const jsonString = JSON.stringify(recipe, null, 2);
 
       if (Platform.OS === 'web') {
-        const blob = new Blob([JSON.stringify(recipe, null, 2)], { type: 'application/json' });
+        const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -146,6 +144,9 @@ export default function HomeScreen({ navigation }) {
         URL.revokeObjectURL(url);
         return;
       }
+
+      const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
+      await FileSystem.writeAsStringAsync(fileUri, jsonString);
 
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri, {
