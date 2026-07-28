@@ -1,11 +1,9 @@
 {
   "buildCommand": "EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 npx expo export --platform web --clear",
   "outputDirectory": "dist",
-  "cleanUrls": true,
-  "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/((?!_expo/).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
