@@ -270,6 +270,16 @@ export default function RecipeEditScreen({ route, navigation }) {
 
   const [loadingRecipe, setLoadingRecipe] = useState(false);
 
+  // Gantt chart configurations
+  const scale = 4; // Pixels per minute
+  const laneCount = 3;
+  const screenWidth = Dimensions.get('window').width;
+  const timelineWidth = Math.max(screenWidth - 60, 320);
+  const laneWidth = timelineWidth / laneCount;
+  
+  const maxEndMinute = steps.reduce((max, s) => Math.max(max, (s.start_offset || 0) + (s.duration || 10)), 120);
+  const ganttContainerHeight = Math.max(maxEndMinute * scale + 100, 400);
+
   useEffect(() => {
     if (paramRecipeId && !existingRecipe) {
       loadFullRecipeData(paramRecipeId);
@@ -336,9 +346,9 @@ export default function RecipeEditScreen({ route, navigation }) {
 
   const commitMove = useCallback((id, newOffset, newLane) => {
     setSteps(prev =>
-      prev.map(s => (s.id === id ? { ...s, start_offset: newOffset, lane_index: newLane } : s))
+      prev.map(s => (s.id === id ? { ...s, start_offset: newOffset, lane_index: Math.min(newLane, laneCount - 1) } : s))
     );
-  }, []);
+  }, [laneCount]);
 
   const commitResize = useCallback((id, newDuration) => {
     setSteps(prev =>
@@ -458,37 +468,42 @@ export default function RecipeEditScreen({ route, navigation }) {
                   </TouchableOpacity>
                 </View>
 
-                <Text style={styles.hintText}>Tap step fields or configure steps below.</Text>
+                <Text style={styles.hintText}>Drag blocks to reposition lanes/time or use handles to resize duration.</Text>
 
                 {steps.length === 0 ? (
                   <Text style={styles.emptyStepsText}>No steps added yet.</Text>
                 ) : (
-                  <View style={styles.timelineContainer}>
-                    {steps.map((st) => (
-                      <View key={st.id} style={styles.stepPreviewCard}>
-                        <View style={styles.blockHeaderRow}>
-                          <TouchableOpacity
-                            onPress={() => openModalForStepField(st.id, 'title', st.title)}
-                          >
-                            <Text style={styles.stepPreviewTitle}>{st.title || 'Untitled Step'}</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity onPress={() => handleDeleteStep(st.id)}>
-                            <Text style={styles.blockDeleteText}>✕</Text>
-                          </TouchableOpacity>
-                        </View>
-                        <TouchableOpacity
-                          onPress={() => openModalForStepField(st.id, 'instruction', st.instruction)}
-                        >
-                          <Text style={styles.blockInstructionText} numberOfLines={2}>
-                            {st.instruction || 'Tap to add instructions...'}
-                          </Text>
-                        </TouchableOpacity>
-                        <Text style={styles.stepPreviewMeta}>
-                          ⏱ Offset: {st.start_offset}m | Duration: {st.duration}m
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
+                  <ScrollView horizontal={false} style={{ width: '100%' }}>
+                    <View style={[styles.ganttCanvas, { height: ganttContainerHeight, width: timelineWidth }]}>
+                      {/* Lane background vertical column guides */}
+                      {Array.from({ length: laneCount }).map((_, idx) => (
+                        <View
+                          key={`lane-${idx}`}
+                          style={[
+                            styles.laneColumnGuide,
+                            { left: idx * (laneWidth + 6), width: laneWidth },
+                          ]}
+                        />
+                      ))}
+
+                      {/* Render Draggable Blocks */}
+                      {steps.map((st) => (
+                        <DraggableStepBlock
+                          key={st.id}
+                          step={st}
+                          scale={scale}
+                          laneWidth={laneWidth}
+                          isSelected={selectedStepId === st.id}
+                          setSelectedStepId={setSelectedStepId}
+                          setIsDragging={setIsDragging}
+                          commitMove={commitMove}
+                          commitResize={commitResize}
+                          handleDeleteStep={handleDeleteStep}
+                          onOpenModal={openModalForStepField}
+                        />
+                      ))}
+                    </View>
+                  </ScrollView>
                 )}
               </View>
             </ScrollView>
@@ -591,16 +606,23 @@ const styles = StyleSheet.create({
   addStepBtnText: { color: COLORS.white, fontSize: 11, fontWeight: '700' },
   hintText: { fontSize: 11, color: COLORS.textSecondary, marginBottom: 8 },
   emptyStepsText: { fontSize: 12, color: COLORS.textSecondary, fontStyle: 'italic', marginBottom: 6 },
-  timelineContainer: { gap: 6 },
-  stepPreviewCard: {
-    backgroundColor: COLORS.cardBackground,
-    padding: 10,
-    borderRadius: 6,
+  ganttCanvas: {
+    position: 'relative',
+    backgroundColor: COLORS.cardSecondary,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: COLORS.borderPrimary,
+    overflow: 'hidden',
+    marginTop: 4,
   },
-  stepPreviewTitle: { fontSize: 13, fontWeight: '700', color: COLORS.textPrimary },
-  stepPreviewMeta: { fontSize: 11, color: COLORS.primary, marginTop: 4 },
+  laneColumnGuide: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    borderRightWidth: 1,
+    borderRightColor: COLORS.borderSecondary,
+    backgroundColor: 'transparent',
+  },
   ganttBlockVertical: {
     position: 'absolute',
     backgroundColor: COLORS.cardBackground,
