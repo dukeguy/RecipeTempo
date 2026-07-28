@@ -24,8 +24,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
-      "publicPath": "/RecipeTempo/"
+      "output": "static"
     },
     "plugins": [
       [
