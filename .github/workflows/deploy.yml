@@ -26,10 +26,11 @@ jobs:
         run: |
           EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 npx expo export --platform web --output-dir dist --clear
           
-          JS_BUNDLE=$(find ./dist/_expo/static/js/web -name "index-*.js" -exec basename {} \; | head -n 1)
-          echo "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/><title>RecipeTempo</title></head><body><div id=\"root\"></div><script src=\"/RecipeTempo/_expo/static/js/web/${JS_BUNDLE}\"></script></body></html>" > ./dist/index.html
+          # If Expo outputs an index.html, use it directly as the SPA fallback (404.html)
+          if [ -f "./dist/index.html" ]; then
+            cp ./dist/index.html ./dist/404.html
+          fi
           
-          cp ./dist/index.html ./dist/404.html
           touch ./dist/.nojekyll
 
       - name: Deploy to GitHub Pages
