@@ -24,7 +24,11 @@ export default function App() {
   }, []);
 
   if (isLoading) {
-    return <SplashScreen />;
+    return (
+      <SafeAreaProvider>
+        <SplashScreen />
+      </SafeAreaProvider>
+    );
   }
 
   return (
