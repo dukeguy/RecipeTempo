@@ -26,7 +26,12 @@ jobs:
         run: |
           EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 npx expo export --platform web --output-dir dist --clear
           
-          # If Expo outputs an index.html, use it directly as the SPA fallback (404.html)
+          # Move Expo's generated static index.html from its subfolder to the root dist folder
+          if [ -f "./dist/index/index.html" ]; then
+            cp ./dist/index/index.html ./dist/index.html
+          fi
+
+          # Ensure 404.html exists for client-side routing fallback
           if [ -f "./dist/index.html" ]; then
             cp ./dist/index.html ./dist/404.html
           fi
