@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -15,12 +16,21 @@ import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { COLORS } from './theme';
 import { getAllRecipes, deleteRecipe, exportDatabase, importDatabase } from './database';
 import Logo from './Logo';
 
-const adUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-xxxxxxxx/xxxxxxxxxx';
+let BannerAd = null;
+let BannerAdSize = null;
+let TestIds = null;
+if (Platform.OS !== 'web') {
+  const ads = require('react-native-google-mobile-ads');
+  BannerAd = ads.BannerAd;
+  BannerAdSize = ads.BannerAdSize;
+  TestIds = ads.TestIds;
+}
+
+const adUnitId = Platform.OS !== 'web' ? (__DEV__ ? TestIds.BANNER : 'ca-app-pub-xxxxxxxx/xxxxxxxxxx') : '';
 
 export default function HomeScreen({ navigation }) {
   const [recipes, setRecipes] = useState([]);
@@ -98,7 +108,9 @@ export default function HomeScreen({ navigation }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              if (Platform.OS !== 'web') {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              }
               await deleteRecipe(recipeId);
               await loadRecipes();
             } catch (error) {
@@ -113,7 +125,9 @@ export default function HomeScreen({ navigation }) {
 
   const handleExportRecipe = async (recipe) => {
     try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
       const safeTitle = (recipe.title || 'recipe').replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const fileName = `${safeTitle}_recipetempo.json`;
       const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
@@ -137,7 +151,9 @@ export default function HomeScreen({ navigation }) {
 
   const handleExportDatabase = async () => {
     try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
       await exportDatabase();
     } catch (error) {
       console.error('Failed to export database:', error);
@@ -156,7 +172,9 @@ export default function HomeScreen({ navigation }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              if (Platform.OS !== 'web') {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              }
               const result = await DocumentPicker.getDocumentAsync({
                 type: ['application/json', '*/*'],
                 copyToCacheDirectory: false,
@@ -191,7 +209,9 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleToggleFavorite = (recipeId) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     setRecipes((prevRecipes) =>
       prevRecipes.map((item) =>
         item.id === recipeId ? { ...item, is_favorite: !item.is_favorite } : item
@@ -301,7 +321,9 @@ export default function HomeScreen({ navigation }) {
             <TouchableOpacity
               style={styles.createBtn}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                if (Platform.OS !== 'web') {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                }
                 navigation.navigate('RecipeEdit');
               }}
             >
@@ -330,7 +352,9 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity
             style={[styles.filterChip, showFavoritesOnly && styles.filterChipActive]}
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              if (Platform.OS !== 'web') {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
               setShowFavoritesOnly(!showFavoritesOnly);
             }}
           >
@@ -350,7 +374,9 @@ export default function HomeScreen({ navigation }) {
                 key={s.key}
                 style={[styles.sortBtn, sortBy === s.key && styles.sortBtnActive]}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  if (Platform.OS !== 'web') {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
                   setSortBy(s.key);
                 }}
               >
@@ -397,7 +423,9 @@ export default function HomeScreen({ navigation }) {
                   <TouchableOpacity
                     style={styles.cardMain}
                     onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      if (Platform.OS !== 'web') {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      }
                       navigation.navigate('RecipeView', {
                         recipeId: item.id,
                         title: item.title,
@@ -455,7 +483,9 @@ export default function HomeScreen({ navigation }) {
                     <TouchableOpacity
                       style={styles.editBtn}
                       onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        if (Platform.OS !== 'web') {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        }
                         navigation.navigate('RecipeEdit', { recipe: item });
                       }}
                     >
@@ -475,15 +505,17 @@ export default function HomeScreen({ navigation }) {
         )}
 
         {/* Pinned Bottom Banner Ad */}
-        <View style={styles.bannerContainer}>
-          <BannerAd
-            unitId={adUnitId}
-            size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-            requestOptions={{
-              requestNonPersonalizedAdsOnly: true,
-            }}
-          />
-        </View>
+        {Platform.OS !== 'web' && (
+          <View style={styles.bannerContainer}>
+            <BannerAd
+              unitId={adUnitId}
+              size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+              requestOptions={{
+                requestNonPersonalizedAdsOnly: true,
+              }}
+            />
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
